@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Geolocalización</title>
+</head>
+<body>
+<h1>Obtener Ubicación Geográfica</h1>
+<button onclick="obtenerUbicacion()">Obtener Mi Ubicación</button>
+
+<div id="result"></div>
+<script>
+
+let result = document.getElementById('result')
+function obtenerUbicacion() {
+    // Verificar si la Geolocalización está disponible en el navegador
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            // Obtener los datos de la posición
+            console.log("Latitud:", position.coords.latitude);
+            console.log("Longitud:", position.coords.longitude);
+            
+            result.innerHTML += "Latitud: " + position.coords.latitude + '<br>';
+            result.innerHTML += "Longitud: " + position.coords.longitude + '<br>';
+            obtenerCiudad(position.coords.latitude, position.coords.longitude).then(ciudad => console.log(ciudad));
+            obtenerDetallesUbicacion(position.coords.latitude, position.coords.longitude).then(detalle => console.log(detalle));
+
+        }, function(error) {
+            console.error("Error al obtener la ubicación:", error);
+            result.innerHTML += `"Error al obtener la ubicación:", ${error}`;
+
+        });
+    } else {
+        // Geolocalización no disponible
+        console.error("Geolocalización no disponible en este navegador.");
+        result.innerHTML = `Geolocalización no disponible en este navegador.`;
+    }                   
+}
+
+async function obtenerDetallesUbicacion(latitud, longitud) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitud}&lon=${longitud}`;
+
+    try {
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+
+        console.log(datos);
+
+        
+        result.innerHTML += datos.type + '<br>'
+        return {
+        ciudad: datos.address.city || datos.address.town || datos.address.village,
+        distrito: datos.address.suburb || datos.address.district
+        };
+    } catch (error) {
+        console.error("Error al obtener detalles de la ubicación:", error);
+        result.innerHTML = `"Error al obtener detalles de la ubicación:", ${error}`;
+    }
+}
+
+
+async function obtenerCiudad(latitud, longitud) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitud}&lon=${longitud}`;
+    
+    try {
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+
+        console.log(datos);
+        result.innerHTML += 'Ciudad:' + datos.address.city + '<br>'
+        result.innerHTML += datos.address.road + '<br>'
+        result.innerHTML += datos.address.house_number + '<br>'
+        result.innerHTML += datos.address.neighbourhood + '<br>'
+        result.innerHTML += datos.address.suburb + '<br>'
+        result.innerHTML += datos.address.postcode + '<br>'
+        result.innerHTML += datos.address.state + '<br>'
+        return datos.address.city || datos.address.town || datos.address.village;
+    } catch (error) {
+        console.error("Error al obtener la ciudad:", error);
+        result.innerHTML += `Error al obtener la ciudad:", ${error}`;
+    }
+}
+
+
+// Llamar a la función para obtener la ubicación
+// obtenerUbicacion();
+
+</script>
+</body>
+</html>
